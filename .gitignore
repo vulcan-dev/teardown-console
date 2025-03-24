@@ -1,0 +1,17 @@
+# Visual Studio
+.vs
+*.sln
+*.vcxproj*
+
+# Snyk
+.dccache
+
+# Other
+build/
+
+projects/tc/deps/imgui/*
+!projects/tc/deps/imgui/.gitkeep
+.ark
+
+launcher.args.json
+notes.txt
