@@ -114,6 +114,14 @@ void td::renderer::onRender() {
                 }
             }
 
+            if (ImGui::Button("Clear History")) {
+                funcs::registry::clearKey(game->registry, &input_history_key);
+                funcs::registry::clearKey(game->registry, &history_count_indexes_key);
+                gInputHistory.clear();
+                input_history_str = "";
+                history_indexes_str = "";
+            }
+
             ImGui::Separator();
 
             ImGui::Text("History: %s", input_history_str.c_str());
