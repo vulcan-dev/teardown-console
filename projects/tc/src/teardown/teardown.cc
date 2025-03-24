@@ -61,15 +61,34 @@ void td::renderer::onRender() {
         first = false;
     }
 
+    static td::td_string input_history_str, history_indexes_str;
+
     ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
     if (ImGui::Begin("Teardown Console")) {
         if (g_devScript) {
             ImGui::InputTextMultiline("Lua Input", luaInput, IM_ARRAYSIZE(luaInput), ImVec2(-1.0f, ImGui::GetTextLineHeight() * 8));
 
             if (ImGui::Button("Execute Lua")) {
-                td::td_string key = "game.mp.lua_input";
-                td::td_string value = luaInput;
-                funcs::registry::setString(game->registry, &key, &value);
+                td::td_string input_history_key = "game.tc.input_history";
+                td::td_string history_count_indexes_key = "game.tc.input_history_indexes";
+
+                // TODO: History array will contain starting positions [8, 12, 32, etc..]
+                //       Also the string, but that will be in another key. At startup, go through this array and get the strings and store it in an array.
+
+                if (funcs::registry::hasKey(game->registry, history_count_indexes_key)) {
+                    funcs::registry::getString(game->registry, &history_indexes_str, &history_count_indexes_key);
+                    history_indexes_str += ",";
+                }
+
+                if (funcs::registry::hasKey(game->registry, input_history_key)) {
+                    funcs::registry::getString(game->registry, &input_history_str, &input_history_key);
+                }
+
+                history_indexes_str += input_history_str.length();
+                funcs::registry::setString(game->registry, &history_count_indexes_key, &history_indexes_str);
+
+                input_history_str += luaInput;
+                funcs::registry::setString(game->registry, &input_history_key, &input_history_str);
 
                 int error = luaL_loadstring(g_devScript->innerCore.state_info->state, luaInput);
                 if (error) {
@@ -85,6 +104,11 @@ void td::renderer::onRender() {
                     }
                 }
             }
+
+            ImGui::Separator();
+
+            ImGui::Text("History: %s", input_history_str.c_str());
+            ImGui::Text("Indexes: %s", history_indexes_str.c_str());
         } else {
             ImGui::TextWrapped("Please make sure you have `data/tc.lua` in your game directory.");
         }
@@ -116,7 +140,7 @@ void h_script_core_registerLuaFunctions(td::script_core_t* scriptCore) {
 
     lua_helpers::registerLuaFunction(scriptCore, td::td_string("TC_Test"), [](td::script_core_t* scriptCore, lua_State* L) -> int {
         td::td_string str;
-        td::td_string name = "game.tc.lua_input";
+        td::td_string name = "game.tc.input_history";
         funcs::registry::getString(teardown::game->registry, &str, &name);
         lua_pushstring(L, str.c_str());
         return 1;

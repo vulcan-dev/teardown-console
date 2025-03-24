@@ -46,6 +46,12 @@ namespace td {
             }
         }
 
+        td_string(int value) {
+            char buffer[32];
+            std::snprintf(buffer, sizeof(buffer), "%d", value);
+            *this = td_string(buffer);
+        }
+
         ~td_string() {
             if (_stack[31] != '\0') {
                 delete[] _heap;
