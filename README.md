@@ -1,5 +1,8 @@
 # Teardown Console
-Allows you to execute Lua commands from a console by pressing F8.
+Allows you to execute Lua commands from a console by pressing F8.  
+Currently working on experimental 1.6.0, should also work on 1.5.4 and possibly previous versions. You might need to run the dumper though, just launch the launcher with `-generate-structs -dump`. Before pressing OK to continue, paste the contents into the respective files.  
+
+DX12 and OpenGL are both supported as well :)
 
 ![](images/image.png)
 

@@ -20,21 +20,17 @@ void h_script_core_registerLuaFunctions(td::script_core_t* scriptCore);
 void h_teardown_update(types::game_t* game, int64_t input);
 lua_State* h_lua_newstate(lua_Alloc f, void* ud);
 
-void renderDebugMenu();
-
 // Public Functions
 //------------------------------------------------------------------------
 void teardown::initialize() {
     console::setStatus("Setting up hooks");
 
-    td::renderer::hookPresent(td::renderer::type::opengl);
+    td::renderer::hookPresent();
 
     mem::hooks::addHook("teardown::ctor", tc::offsets::teardown::initialize, &h_teardown_initialize, &funcs::teardown::initialize);
     mem::hooks::addHook("teardown::update", tc::offsets::teardown::update, &h_teardown_update, &funcs::teardown::update);
     mem::hooks::addHook("luaL_newstate", tc::offsets::lua::lua_newstate, &h_lua_newstate, &funcs::lua::lua_newstate);
     mem::hooks::addHook("script_core::registerLuaFunctions", tc::offsets::script_core::registerLuaFunctions, &h_script_core_registerLuaFunctions, &funcs::script_core::registerLuaFunctions);
-
-    td::renderer::addRenderCallback(&renderDebugMenu);
 
     // TODO: Figure out how to set a custom tag for the logging function
     funcs::game::log(types::log_level::debug, "Debug");
@@ -45,7 +41,7 @@ void teardown::initialize() {
 
 // Other Functions
 //------------------------------------------------------------------------
-void renderDebugMenu() {
+void td::renderer::onRender() {
     static char luaInput[4096];
     static char errorMessage[1024] = "";
 
@@ -112,8 +108,8 @@ void h_script_core_registerLuaFunctions(td::script_core_t* scriptCore) {
 #endif
     lua_setglobal(L, "TC_DEBUG");
 
-    lua_helpers::registerLuaFunction(scriptCore, td::td_string("MP_GetVersion"), [](td::script_core_t* scriptCore, lua_State* L) -> int {
-        lua_pushstring(L, "not-set");
+    lua_helpers::registerLuaFunction(scriptCore, td::td_string("TC_Test"), [](td::script_core_t* scriptCore, lua_State* L) -> int {
+        lua_pushstring(L, "Seems to be working");
         return 1;
     });
 
@@ -142,55 +138,7 @@ void h_teardown_update(types::game_t* game, int64_t input) {
         g_devScript = (td::script_core_t*)malloc(0x2278);
         funcs::script_core::ctor(g_devScript);
 
+        funcs::script_core::loadScript(g_devScript, "data/tc.lua");
         luaL_openlibs(g_devScript->innerCore.state_info->state);
     }
-
-    //types::player_t* player = (types::player_t*)(teardown::game->player);
-    //types::scene_t*  scene = (types::scene_t*)(teardown::game->scene);
-
-    //if (state != game->state) {
-    //    state = game->state;
-
-    //    td::td_string stateSwitch = "Switched state to: ";
-    //    switch (state) {
-    //        case types::game_state::splash:       stateSwitch += "splash"; break;
-    //        case types::game_state::menu:         stateSwitch += "menu"; break;
-    //        case types::game_state::ui:           stateSwitch += "ui"; break;
-    //        case types::game_state::loading:      stateSwitch += "loading"; break;
-    //        case types::game_state::menu_loading: stateSwitch += "menu_loading"; break;
-    //        case types::game_state::play:         stateSwitch += "play"; break;
-    //        case types::game_state::edit:         stateSwitch += "edit"; break;
-    //        case types::game_state::quit:         stateSwitch += "quit"; break;
-    //        default:                              stateSwitch += "none"; break;
-    //    }
-
-    //    console::writeln_td(stateSwitch);
-    //}
-
-    //if (scene) {
-    //    scene->firesystem->fires.reset();
-    //    scene->projectiles.reset();
-    //}
-
-    //player->health = 1;
-
-    //if (GetAsyncKeyState(VK_F1) & 0x8000) {
-    //    //console::writeln("TEST: {}", *((float*)((char*)game->qwordB8 + 0x15c)));
-
-    //    console::writeln("Health: {}\nSpeed: {}", player->health, player->walkingSpeed);
-    //    console::writeln("Grabbed body & shape: {} {}",
-    //                     (player->grabbedBody != nullptr ? player->grabbedBody->handle : 0),
-    //                     (player->grabbedShape != nullptr ? player->grabbedShape->handle : 0)
-    //    );
-
-    //    console::writeln("Transform: ({} {} {}) ({} {} {} {})", player->pos.x, player->pos.y, player->pos.z,
-    //                     player->rot.x,
-    //                     player->rot.y,
-    //                     player->rot.z,
-    //                     player->rot.w
-    //    );
-
-    //    console::writeln("Velocity: {} {} {}", player->velocity.x, player->velocity.y, player->velocity.z);
-    //    console::writeln("Grounded: {}", player->isGrounded != 0);
-    //}
 }

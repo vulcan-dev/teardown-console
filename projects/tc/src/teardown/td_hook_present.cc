@@ -41,8 +41,6 @@ using tResizeBuffers = std::add_pointer_t<HRESULT(IDXGISwapChain* SwapChain, UIN
 // Globals
 //------------------------------------------------------------------------
 namespace {
-    static std::vector<renderer::tRenderCallback> g_vRenderCallbacks;
-
     static tCreateSwapChainForHwnd      o_CreateSwapChainForHwnd = nullptr;
     static tD3D12Present                o_Present = nullptr;
     static WNDPROC                      g_WindowProc;
@@ -255,9 +253,7 @@ void setupImGui() {
 void onImGuiRender() {
     ImGui::NewFrame();
 
-    for (const auto& callback : g_vRenderCallbacks) {
-        callback();
-    }
+    td::renderer::onRender();
 
     ImGui::EndFrame();
 }
@@ -310,10 +306,6 @@ DWORD* __fastcall h_rendererInitFor(DWORD* a1, int* a2) {
 
 // Public Functions
 //------------------------------------------------------------------------
-void renderer::hookPresent(renderer::type type) {
+void renderer::hookPresent() {
     mem::hooks::addHook("renderer::initializeForAPI", tc::offsets::renderer::initializeForAPI, &h_rendererInitFor, &funcs::renderer::initializeForAPI);
-}
-
-void renderer::addRenderCallback(const tRenderCallback& callback) {
-    g_vRenderCallbacks.emplace_back(callback);
 }
