@@ -53,7 +53,8 @@ namespace tc::dumper {
         { "getBool", "40 53 48 83 EC 40 45 33 C0 E8 ? ? ? ? 48 8D 4C 24 20 48 85 C0 74 0B 48 8D 50 28 E8 ? ? ? ? EB 06 E8 ? ? ? ? 90 48 8D 15", function_type("bool", "void* registry, td::td_string str") },
         { "setBool", "48 89 5C 24 08 57 48 83 EC 40 48 8B DA 48 8B F9 48 8D 05", function_type("void", "void* registry, td::td_string* str, bool value") },
         { "setString", "48 89 5C 24 10 57 48 83 EC 20 49 8B D8 41", function_type("void", "void* registry, td::td_string* str, td::td_string* value") },
-        { "hasKey" , "48 83 EC 28 45 33 C0 E8 ? ? ? ? 48 85 C0 0F", function_type("bool", "void* registry, td::td_string* str" ) }
+        { "hasKey" , "48 83 EC 28 45 33 C0 E8 ? ? ? ? 48 85 C0 0F", function_type("bool", "void* registry, td::td_string* str" ) },
+        { "clearKey", "48 89 5C 24 08 57 48 83 EC 20 48 8B D9 45", function_type("void", "void* registry, td::td_string* str") }
     };
 
     static constexpr dumper_signature scriptCoreSignatures[] = {
