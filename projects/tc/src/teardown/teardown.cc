@@ -132,6 +132,7 @@ void h_teardown_update(types::game_t* game, int64_t input) {
     static bool first = true;
 
     // Exception thrown at 0x00007FF793BB57ED in teardown.exe.unpacked.exe: 0xC0000005: Access violation reading location 0x00000000000001A8.
+    // Think I fixed the above?? Will have to wait and find out I guess..
     funcs::teardown::update(teardown::game, input);
 
     if (first) {
@@ -141,7 +142,6 @@ void h_teardown_update(types::game_t* game, int64_t input) {
         g_devScript = (td::script_core_t*)malloc(0x2278);
         funcs::script_core::ctor(g_devScript);
 
-        funcs::script_core::loadScript(g_devScript, "data/tdmp_dev.lua");
         luaL_openlibs(g_devScript->innerCore.state_info->state);
     }
 

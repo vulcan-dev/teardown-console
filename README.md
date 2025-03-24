@@ -1,6 +1,5 @@
 # Teardown Console
 Allows you to execute Lua commands from a console by pressing F8.
-As of right now, you need to have `tdmp_dev.lua` in `teardown/data/`. Just copied my old TDMP code (the refactor) and stripped some things.
 
 ![](images/image.png)
 
