@@ -43,7 +43,7 @@ namespace tc::dumper {
 
     static constexpr dumper_signature tdSignatures[] = {
         { "initialize", "4C 89 44 24 18 48 89 4C 24 08 55 53 56 57 41 54 41 55 41 56 41 57 48 8D 6C", function_type("tc::teardown::types::game_t*", "tc::teardown::types::game_t* game, DWORD** a2, int64_t a3") },
-        { "update", "48 8B C4 48 89 58 18 48 89 50 10 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C", function_type("tc::teardown::types::game_t*", "tc::teardown::types::game_t* game, int64_t input") }
+        { "update", "48 8B C4 48 89 58 18 48 89 50 10 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C", function_type("tc::teardown::types::game_t*", "tc::teardown::types::game_t* game, void* input") }
     };
 
     static constexpr dumper_signature registrySignatures[] = {

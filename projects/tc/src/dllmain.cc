@@ -8,9 +8,6 @@ using namespace tc;
 
 void earlyEntryThread();
 
-HANDLE g_hThread = NULL;
-HANDLE hEvent = NULL;
-
 DWORD WINAPI threadFunction(LPVOID lpParam) {
     SetEvent((HANDLE)lpParam);
     earlyEntryThread();
@@ -31,30 +28,10 @@ BOOL WINAPI DllMain(
 
         DisableThreadLibraryCalls(hinstDLL);
 
-        hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-        if (hEvent == NULL) {
-            return FALSE;
-        }
-
-        // Create the thread, passing the event handle as a parameter
-        g_hThread = CreateThread(nullptr, 0, threadFunction, hEvent, 0, nullptr);
-        if (g_hThread == NULL) {
-            CloseHandle(hEvent);
-            return FALSE;
-        }
+        earlyEntryThread();
     }
 
     return TRUE;
-}
-
-void pauseMainThreadAndWaitForChildThread() {
-    if (g_hThread != NULL) {
-        // Wait for the thread to signal that it has started
-        WaitForSingleObject(hEvent, INFINITE);
-
-        CloseHandle(hEvent);
-        WaitForSingleObject(g_hThread, INFINITE);
-    }
 }
 
 void earlyEntryThread() {

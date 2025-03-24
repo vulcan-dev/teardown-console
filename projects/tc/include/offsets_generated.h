@@ -97,7 +97,7 @@ namespace tc {
 
             namespace teardown {
                 using tinitialize = std::add_pointer_t<tc::teardown::types::game_t* (tc::teardown::types::game_t* game, DWORD** a2, int64_t a3)>;
-                using tupdate = std::add_pointer_t<tc::teardown::types::game_t* (tc::teardown::types::game_t* game, int64_t input)>;
+                using tupdate = std::add_pointer_t<tc::teardown::types::game_t* (tc::teardown::types::game_t* game, void* input)>;
             }
 
             namespace registry {

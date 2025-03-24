@@ -15,9 +15,9 @@ static td::script_core_t* g_devScript;
 
 // Forward Functions
 //------------------------------------------------------------------------
-types::game_t* h_teardown_initialize(types::game_t* magicShit, DWORD** a2, int64_t a3);
+types::game_t* __fastcall h_teardown_initialize(types::game_t* magicShit, DWORD** a2, int64_t a3);
 void h_script_core_registerLuaFunctions(td::script_core_t* scriptCore);
-void h_teardown_update(types::game_t* game, int64_t input);
+void __fastcall h_teardown_update(types::game_t* game, void* input);
 lua_State* h_lua_newstate(lua_Alloc f, void* ud);
 
 // Public Functions
@@ -118,27 +118,22 @@ void h_script_core_registerLuaFunctions(td::script_core_t* scriptCore) {
 
 teardown::types::game_t* h_teardown_initialize(teardown::types::game_t* game, DWORD** a2, int64_t a3) {
     teardown::game = funcs::teardown::initialize(game, a2, a3);
-    console::writeln("Game initialized");
+    console::writeln("Game: 0x{:X}", (uintptr_t)teardown::game);
 
-    return teardown::game;
-}
-
-void h_teardown_update(types::game_t* game, int64_t input) {
-    static types::game_state state = types::game_state::none;
-    static bool first = true;
-
-    // Exception thrown at 0x00007FF793BB57ED in teardown.exe.unpacked.exe: 0xC0000005: Access violation reading location 0x00000000000001A8.
-    // Think I fixed the above?? Will have to wait and find out I guess..
-    funcs::teardown::update(teardown::game, input);
-
-    if (first) {
-        first = false;
-
-        //g_devScript = (td::script_core_t*)malloc(0x21A8);
+    { // Setup our script
         g_devScript = (td::script_core_t*)malloc(0x2278);
         funcs::script_core::ctor(g_devScript);
 
         funcs::script_core::loadScript(g_devScript, "data/tc.lua");
         luaL_openlibs(g_devScript->innerCore.state_info->state);
     }
+
+    return teardown::game;
+}
+
+void h_teardown_update(types::game_t* game, void* input) {
+    funcs::teardown::update(teardown::game, input);
+
+    static types::game_state state = types::game_state::none;
+    static bool first = true;
 }
