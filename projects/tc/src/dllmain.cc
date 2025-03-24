@@ -1,6 +1,10 @@
 #include "pch.h"
+#include "console.h"
 #include "teardown/teardown.h"
+#include "teardown/td_script_core.h"
+#include "teardown/containers/td_containers.h"
 #include "teardown/types.h"
+#include "memory/memory.h"
 #include "offsets_generated.h"
 #include "memory/dumper.h"
 

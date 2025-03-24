@@ -1,17 +1,30 @@
 #include "pch.h"
-#include "teardown/teardown.h"
+#include "console.h"
+#include "teardown/containers/td_containers.h"
+#include "teardown/td_script_core.h"
 #include "teardown/lua_helpers.h"
 #include "teardown/td_hook_present.h"
 #include "teardown/types.h"
-
-#include "offsets_generated.h"
+#include "teardown/teardown.h"
+#include "memory/memory.h"
 #include "shared/util/util.h"
 #include "memory/hooks.h"
+#include "offsets_generated.h"
 
 using namespace tc;
 using namespace teardown;
 
 static td::script_core_t* g_devScript;
+
+namespace {
+    std::vector<td::td_string> gInputHistory;
+    td::td_string input_history_str, history_indexes_str;
+    int gInputHistoryIndex = 0;
+
+    // Do not set td_string here as if it's heap allocated, we won't have the alloc function in time.
+    td::td_string input_history_key;// = "savegame.mod.tc.input_history";
+    td::td_string history_count_indexes_key;// = "savegame.mod.tc.input_history_sizes";
+}
 
 // Forward Functions
 //------------------------------------------------------------------------
@@ -47,44 +60,40 @@ void td::renderer::onRender() {
 
     static bool first = true;
 
-    if (first) {
-        if (!teardown::game) {
-            console::writeln("fuck!");
-            return;
-        }
-
-        //if (funcs::registry::hasKey(teardown::game->registry, "game.mp.lua_input")) {
-        //    td::td_string str = funcs::registry::getString(teardown::game->registry, td::td_string("game.mp.lua_input"));
-        //    ::memcpy(luaInput, str.c_str(), str.length());
-        //}
-
-        first = false;
-    }
-
-    static td::td_string input_history_str, history_indexes_str;
-
     ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
     if (ImGui::Begin("Teardown Console")) {
         if (g_devScript) {
             ImGui::InputTextMultiline("Lua Input", luaInput, IM_ARRAYSIZE(luaInput), ImVec2(-1.0f, ImGui::GetTextLineHeight() * 8));
 
             if (ImGui::Button("Execute Lua")) {
-                td::td_string input_history_key = "game.tc.input_history";
-                td::td_string history_count_indexes_key = "game.tc.input_history_indexes";
+                int luaInputLen = strlen(luaInput);
+                int totalSize = luaInputLen + 1; // +1 for the comma
 
-                // TODO: History array will contain starting positions [8, 12, 32, etc..]
-                //       Also the string, but that will be in another key. At startup, go through this array and get the strings and store it in an array.
-
-                if (funcs::registry::hasKey(game->registry, history_count_indexes_key)) {
-                    funcs::registry::getString(game->registry, &history_indexes_str, &history_count_indexes_key);
-                    history_indexes_str += ",";
-                }
-
-                if (funcs::registry::hasKey(game->registry, input_history_key)) {
+                // Add to history
+                if (funcs::registry::hasKey((uint8_t**)game->registry, &input_history_key)) {
                     funcs::registry::getString(game->registry, &input_history_str, &input_history_key);
                 }
 
-                history_indexes_str += input_history_str.length();
+                if (funcs::registry::hasKey((uint8_t**)game->registry, &history_count_indexes_key)) {
+                    funcs::registry::getString(game->registry, &history_indexes_str, &history_count_indexes_key);
+                    std::string indexes = std::string(history_indexes_str.c_str(), history_indexes_str.length());
+                    int colonPos = indexes.find(":");
+                    if (colonPos != std::string::npos) {
+                        totalSize += std::stoi(indexes.substr(0, colonPos));
+                        td::td_string without_size_indexes_str = indexes.substr(colonPos + 1).c_str();
+                        history_indexes_str = td::td_string::fromInt(totalSize);
+                        history_indexes_str += ":";
+                        history_indexes_str += without_size_indexes_str;
+                        history_indexes_str += ",";
+                    } else {
+                        // Bad, clear all history.
+                    }
+                } else {
+                    history_indexes_str = td::td_string::fromInt(totalSize);
+                    history_indexes_str += ":";
+                }
+
+                history_indexes_str += td::td_string::fromInt(luaInputLen);
                 funcs::registry::setString(game->registry, &history_count_indexes_key, &history_indexes_str);
 
                 input_history_str += luaInput;
@@ -140,7 +149,7 @@ void h_script_core_registerLuaFunctions(td::script_core_t* scriptCore) {
 
     lua_helpers::registerLuaFunction(scriptCore, td::td_string("TC_Test"), [](td::script_core_t* scriptCore, lua_State* L) -> int {
         td::td_string str;
-        td::td_string name = "game.tc.input_history";
+        td::td_string name = "savegame.mod.tc.input_history";
         funcs::registry::getString(teardown::game->registry, &str, &name);
         lua_pushstring(L, str.c_str());
         return 1;
@@ -153,6 +162,18 @@ teardown::types::game_t* h_teardown_initialize(teardown::types::game_t* game, DW
     teardown::game = funcs::teardown::initialize(game, a2, a3);
     console::writeln("Game: 0x{:X}", (uintptr_t)teardown::game);
 
+    // We cannot use td_string before
+    input_history_key = "savegame.mod.tc.input_history";
+    history_count_indexes_key = "savegame.mod.tc.input_history_sizes";
+
+    { // Test
+        //void* mem = funcs::mem::alloc(0x128);
+        //console::writeln("Allocated: 0x{:X}", (uintptr_t)mem);
+        //delete mem; // not good
+    }
+
+    // TODO: Improve how strings are handled.
+
     { // Setup our script
         if (!std::filesystem::exists("data/tc.lua")) {
             console::writeln("Failed to find data/tc.lua");
@@ -164,6 +185,50 @@ teardown::types::game_t* h_teardown_initialize(teardown::types::game_t* game, DW
 
         funcs::script_core::loadScript(g_devScript, "data/tc.lua");
         luaL_openlibs(g_devScript->innerCore.state_info->state);
+
+        { // Get input history
+            td::td_string history_str;
+            td::td_string sizes_str;
+
+            if (funcs::registry::hasKey((uint8_t**)teardown::game->registry, &history_count_indexes_key)) {
+                funcs::registry::getString(teardown::game->registry, &sizes_str, &history_count_indexes_key);
+                history_indexes_str = sizes_str;
+
+                if (funcs::registry::hasKey((uint8_t**)teardown::game->registry, &input_history_key)) {
+                    funcs::registry::getString(teardown::game->registry, &history_str, &input_history_key);
+                    input_history_str = history_str;
+
+                    int startIndex = 0;
+                    int allocSize = 0;
+                    int currentPosition = 0;
+
+                    std::string sizes_stdstr = std::string(sizes_str.c_str(), sizes_str.length());
+                    std::string history_stdstr = std::string(history_str.c_str(), history_str.length());
+                    for (size_t i = 0; i < sizes_str.length(); i++) {
+                        if (allocSize == 0 && sizes_str[i] == ':') {
+                            allocSize = std::stoi(sizes_stdstr.substr(startIndex, i - startIndex).c_str());
+                            gInputHistory.reserve(allocSize);
+                            startIndex = i + 1;
+                        } else if (allocSize > 0 && (sizes_str[i] == ',' || i == sizes_str.length() - 1)) {
+                            int endPos = i;
+                            if (i == sizes_str.length() - 1) {
+                                endPos = i + 1;
+                            }
+
+                            int size = std::stoi(sizes_stdstr.substr(startIndex, endPos - startIndex).c_str());
+
+                            if (size > 0 && currentPosition + size <= history_str.length()) {
+                                gInputHistory.push_back(history_stdstr.substr(currentPosition, size).c_str()); // This string conversion is beautiful, but right now I don't care
+                                currentPosition += size;
+                            }
+
+                            startIndex = i + 1;
+                        }
+                    }
+                }
+            }
+        }
+
     }
 
     return teardown::game;

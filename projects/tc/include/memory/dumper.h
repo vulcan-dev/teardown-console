@@ -49,11 +49,11 @@ namespace tc::dumper {
     static constexpr dumper_signature registrySignatures[] = {
         { "getInt", "40 53 48 83 EC 40 45 33 C0 E8 ?? ?? ?? ?? 48 8D 4C 24 20 48 85 C0 74 0B 48 8D 50 28 E8 ?? ?? ?? ?? EB 06 E8 ?? ?? ?? ?? 90 48 8D 4C", function_type("int", "void* registry, td::td_string str") },
         { "getFloat", "48 83 EC 58 0F 29 74 24 40 45", function_type("float", "void* registry, td::td_string str") },
-        { "getString", "40 53 48 83 EC 30 49 8B C0 48 8B DA 48", function_type("td::td_string", "void* registry, td::td_string& out, td::td_string& name") },
-        { "getBool", "40 53 48 83 EC 40 45 33 C0 E8 ? ? ? ? 48 8D 4C 24 20 48 85 C0 74 0B 48 8D 50 28 E8 ? ? ? ? EB 06 E8 ? ? ? ? 90 48 8D 15", function_type("bool", "uint8_t** registry, td::td_string str") },
-        { "setBool", "48 89 5C 24 08 57 48 83 EC 40 48 8B DA 48 8B F9 48 8D 05", function_type("void", "void* registry, td::td_string str, bool value") },
-        { "setString", "48 89 5C 24 10 57 48 83 EC 20 49 8B D8 41", function_type("void", "void* registry, td::td_string str, td::td_string value") },
-        { "hasKey" , "48 83 EC 28 45 33 C0 E8 ? ? ? ? 48 85 C0 0F", function_type("bool", "void* registry, td::td_string str" ) }
+        { "getString", "40 53 48 83 EC 30 49 8B C0 48 8B DA 48", function_type("td::td_string*", "void* registry, td::td_string* out, td::td_string* name") },
+        { "getBool", "40 53 48 83 EC 40 45 33 C0 E8 ? ? ? ? 48 8D 4C 24 20 48 85 C0 74 0B 48 8D 50 28 E8 ? ? ? ? EB 06 E8 ? ? ? ? 90 48 8D 15", function_type("bool", "void* registry, td::td_string str") },
+        { "setBool", "48 89 5C 24 08 57 48 83 EC 40 48 8B DA 48 8B F9 48 8D 05", function_type("void", "void* registry, td::td_string* str, bool value") },
+        { "setString", "48 89 5C 24 10 57 48 83 EC 20 49 8B D8 41", function_type("void", "void* registry, td::td_string* str, td::td_string* value") },
+        { "hasKey" , "48 83 EC 28 45 33 C0 E8 ? ? ? ? 48 85 C0 0F", function_type("bool", "void* registry, td::td_string* str" ) }
     };
 
     static constexpr dumper_signature scriptCoreSignatures[] = {
@@ -64,7 +64,7 @@ namespace tc::dumper {
     };
 
     static constexpr dumper_signature scriptSignatures[] = {
-        { "ctor", "48 89 4C 24 08 53 48 83 EC 20 48 8B D9 4C", function_type("tc::teardown::types::script_t*", "tc::teardown::types::script_t* script, bool entityThing") }
+        { "ctor", "48 89 4C 24 08 53 48 83 EC 20 48 8B D9 4C", function_type("tc::teardown::types::script_t*", "tc::teardown::types::script_t* script, bool entityThing") },
     };
 
     // Render Signatures
@@ -72,6 +72,21 @@ namespace tc::dumper {
     static constexpr dumper_signature renderSignatures[] = {
         { "createDXGIFactory1", "E8 ? ? ? ? 85 C0 78 69", function_type("HRESULT __stdcall", "const IID *const riid, void **ppFactory") },
         { "initializeForAPI", "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 40 48 8B FA 48 8B F1 48 63", function_type("DWORD* __fastcall", "DWORD* a1, int *a2") }
+    };
+
+    // String Signatures
+    //------------------------------------------------------------------------
+    static constexpr dumper_signature stringSignatures[] = {
+        { "free", "48 83 EC 28 80 79 1F 00 74 09",  function_type("void", "td::td_string* str") },
+        { "fromCStr", "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 20 48 85 D2 C6", function_type("td::td_string*", "td::td_string* str, const char* from") }
+    };
+
+    // Memory Signatures
+    //------------------------------------------------------------------------
+    static constexpr dumper_signature memorySignatures[] = {
+        { "free", "E8 ?? ?? ?? ?? 90 49 8D 76 08", function_type("void", "void* block") },
+        { "alloc", "40 53 48 83 EC 30 48 8B D9 48 85 C9 75", function_type("void*", "size_t size") },
+        { "allocAligned", "48 83 EC 38 48 85 C9", function_type("void*", "size_t size, size_t alignment") }
     };
 
     // All Signatures
@@ -86,6 +101,8 @@ namespace tc::dumper {
         ADD_NAMESAPCE("teardown", tdSignatures),
         ADD_NAMESAPCE("registry", registrySignatures),
         ADD_NAMESAPCE("renderer", renderSignatures),
+        ADD_NAMESAPCE("string", stringSignatures),
+        ADD_NAMESAPCE("mem", memorySignatures)
     };
 
     bool dump(bool genStructs);
