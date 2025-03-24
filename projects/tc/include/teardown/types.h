@@ -397,7 +397,7 @@ namespace tc::teardown::types {
         player_t* player;
         uint64_t qwordC0;
         uint64_t qwordC8;
-        uint8_t** registry;
+        void* registry;
         uint64_t qwordD8;
         uint64_t qwordE0;
         uint64_t qwordE8;

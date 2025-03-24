@@ -53,34 +53,40 @@ void td::renderer::onRender() {
             return;
         }
 
-        if (funcs::registry::hasKey(teardown::game->registry, "game.mp.lua_input")) {
-            td::td_string str = funcs::registry::getString(teardown::game->registry, td::td_string("game.mp.lua_input"));
-            ::memcpy(luaInput, str.c_str(), str.length());
-        }
+        //if (funcs::registry::hasKey(teardown::game->registry, "game.mp.lua_input")) {
+        //    td::td_string str = funcs::registry::getString(teardown::game->registry, td::td_string("game.mp.lua_input"));
+        //    ::memcpy(luaInput, str.c_str(), str.length());
+        //}
 
         first = false;
     }
 
     ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
     if (ImGui::Begin("Teardown Console")) {
-        ImGui::InputTextMultiline("Lua Input", luaInput, IM_ARRAYSIZE(luaInput), ImVec2(-1.0f, ImGui::GetTextLineHeight() * 8));
+        if (g_devScript) {
+            ImGui::InputTextMultiline("Lua Input", luaInput, IM_ARRAYSIZE(luaInput), ImVec2(-1.0f, ImGui::GetTextLineHeight() * 8));
 
-        if (ImGui::Button("Execute Lua")) {
-            int error = luaL_loadstring(g_devScript->innerCore.state_info->state, luaInput);
-            if (error) {
-                snprintf(errorMessage, sizeof(errorMessage), "Error loading Lua: %s", lua_tostring(g_devScript->innerCore.state_info->state, -1));
-                lua_pop(g_devScript->innerCore.state_info->state, 1);
-            } else {
-                error = lua_pcall(g_devScript->innerCore.state_info->state, 0, LUA_MULTRET, 0);
+            if (ImGui::Button("Execute Lua")) {
+                td::td_string key = "game.mp.lua_input";
+                td::td_string value = luaInput;
+                funcs::registry::setString(game->registry, &key, &value);
+
+                int error = luaL_loadstring(g_devScript->innerCore.state_info->state, luaInput);
                 if (error) {
-                    snprintf(errorMessage, sizeof(errorMessage), "Error executing Lua: %s", lua_tostring(g_devScript->innerCore.state_info->state, -1));
+                    snprintf(errorMessage, sizeof(errorMessage), "Error loading Lua: %s", lua_tostring(g_devScript->innerCore.state_info->state, -1));
                     lua_pop(g_devScript->innerCore.state_info->state, 1);
                 } else {
-                    snprintf(errorMessage, sizeof(errorMessage), "Lua code executed successfully.");
+                    error = lua_pcall(g_devScript->innerCore.state_info->state, 0, LUA_MULTRET, 0);
+                    if (error) {
+                        snprintf(errorMessage, sizeof(errorMessage), "Error executing Lua: %s", lua_tostring(g_devScript->innerCore.state_info->state, -1));
+                        lua_pop(g_devScript->innerCore.state_info->state, 1);
+                    } else {
+                        snprintf(errorMessage, sizeof(errorMessage), "Lua code executed successfully.");
+                    }
                 }
             }
-
-            funcs::registry::setString(game->registry, "game.mp.lua_input", luaInput);
+        } else {
+            ImGui::TextWrapped("Please make sure you have `data/tc.lua` in your game directory.");
         }
 
         ImGui::TextWrapped("%s", errorMessage);
@@ -109,7 +115,10 @@ void h_script_core_registerLuaFunctions(td::script_core_t* scriptCore) {
     lua_setglobal(L, "TC_DEBUG");
 
     lua_helpers::registerLuaFunction(scriptCore, td::td_string("TC_Test"), [](td::script_core_t* scriptCore, lua_State* L) -> int {
-        lua_pushstring(L, "Seems to be working");
+        td::td_string str;
+        td::td_string name = "game.tc.lua_input";
+        funcs::registry::getString(teardown::game->registry, &str, &name);
+        lua_pushstring(L, str.c_str());
         return 1;
     });
 
@@ -121,6 +130,11 @@ teardown::types::game_t* h_teardown_initialize(teardown::types::game_t* game, DW
     console::writeln("Game: 0x{:X}", (uintptr_t)teardown::game);
 
     { // Setup our script
+        if (!std::filesystem::exists("data/tc.lua")) {
+            console::writeln("Failed to find data/tc.lua");
+            return teardown::game;
+        }
+
         g_devScript = (td::script_core_t*)malloc(0x2278);
         funcs::script_core::ctor(g_devScript);
 

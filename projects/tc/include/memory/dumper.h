@@ -49,7 +49,7 @@ namespace tc::dumper {
     static constexpr dumper_signature registrySignatures[] = {
         { "getInt", "40 53 48 83 EC 40 45 33 C0 E8 ?? ?? ?? ?? 48 8D 4C 24 20 48 85 C0 74 0B 48 8D 50 28 E8 ?? ?? ?? ?? EB 06 E8 ?? ?? ?? ?? 90 48 8D 4C", function_type("int", "uint8_t** registry, td::td_string str") },
         { "getFloat", "48 83 EC 58 0F 29 74 24 40 45", function_type("float", "uint8_t** registry, td::td_string str") },
-        { "getString", "40 53 48 83 EC 30 49 8B C0 48 8B DA 48", function_type("td::td_string", "uint8_t** registry, td::td_string str") },
+        { "getString", "40 53 48 83 EC 30 49 8B C0 48 8B DA 48", function_type("td::td_string", "uint8_t** registry, td::td_string& out, td::td_string& name") },
         { "getBool", "40 53 48 83 EC 40 45 33 C0 E8 ? ? ? ? 48 8D 4C 24 20 48 85 C0 74 0B 48 8D 50 28 E8 ? ? ? ? EB 06 E8 ? ? ? ? 90 48 8D 15", function_type("bool", "uint8_t** registry, td::td_string str") },
         { "setBool", "48 89 5C 24 08 57 48 83 EC 40 48 8B DA 48 8B F9 48 8D 05", function_type("void", "uint8_t** a1, td::td_string str, bool value") },
         { "setString", "48 89 5C 24 10 57 48 83 EC 20 49 8B D8 41", function_type("void", "uint8_t** a1, td::td_string str, td::td_string value") },

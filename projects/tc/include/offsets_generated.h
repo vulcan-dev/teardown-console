@@ -103,10 +103,10 @@ namespace tc {
             namespace registry {
                 using tgetInt = std::add_pointer_t<int(uint8_t** registry, td::td_string str)>;
                 using tgetFloat = std::add_pointer_t<float(uint8_t** registry, td::td_string str)>;
-                using tgetString = std::add_pointer_t<td::td_string(uint8_t** registry, td::td_string str)>;
+                using tgetString = std::add_pointer_t<td::td_string*(void* registry, td::td_string* out, td::td_string* name)>;
                 using tgetBool = std::add_pointer_t<bool(uint8_t** registry, td::td_string str)>;
                 using tsetBool = std::add_pointer_t<void(uint8_t** a1, td::td_string str, bool value)>;
-                using tsetString = std::add_pointer_t<void(uint8_t** a1, td::td_string str, td::td_string value)>;
+                using tsetString = std::add_pointer_t<void(void* a1, td::td_string* str, td::td_string* value)>;
                 using thasKey = std::add_pointer_t<bool(uint8_t** a1, td::td_string str)>;
             }
 
